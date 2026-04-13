@@ -159,8 +159,8 @@ function toggle() {
   if(running) {
     btn.textContent='⏸ Pause'; btn.className='btn-toggle btn-pause';
     dot.className='dot green'; txt.textContent='Live'; txt.style.color='#4ade80';
-    foot.textContent='Live — checking every 30s';
-    addLog('▶ Started — watching for sign-ins');
+    foot.textContent='Live  -  checking every 30s';
+    addLog('▶ Started  -  watching for sign-ins');
     cycle();
     pollTimer = setInterval(cycle, 30000);
   } else {
@@ -216,14 +216,14 @@ async function cycle() {
       processed.add(String(a.id));
       statuses[a.id]='running';
       updateStats(); renderList();
-      addLog('🔍 Processing: '+a.name+' — '+a.company);
+      addLog('🔍 Processing: '+a.name+'  -  '+a.company);
       try {
         await triggerAudit(a);
         statuses[a.id]='done';
-        addLog('✅ Triggered: '+a.name+' — audit + email running on Google servers');
+        addLog('✅ Triggered: '+a.name+'  -  audit + email running on Google servers');
       } catch(err) {
         statuses[a.id]='error';
-        addLog('❌ Failed: '+a.name+' — '+err.message);
+        addLog('❌ Failed: '+a.name+'  -  '+err.message);
       }
       updateStats(); renderList();
       await sleep(1500);
@@ -273,7 +273,7 @@ function renderList() {
           <span class="card-num">#${i+1} · ${esc(a.checked_in||'')}</span>
         </div>
       </div>
-      ${s==='done'?`<div class="card-success">✅ Audit complete — email delivered to ${esc(a.email)}</div>`:''}
+      ${s==='done'?`<div class="card-success">✅ Audit complete  -  email delivered to ${esc(a.email)}</div>`:''}
       ${s==='error'?`<button class="btn-retry" onclick="retry('${a.id}')">↺ Retry</button>`:''}
     </div>`;
   }).join('');
@@ -297,7 +297,7 @@ function retry(id) {
     updateStats(); renderList();
     triggerAudit(a)
       .then(()=>{ statuses[id]='done'; addLog('✅ Retry sent: '+a.name); updateStats(); renderList(); })
-      .catch(err=>{ statuses[id]='error'; addLog('❌ Retry failed: '+a.name+' — '+err.message); updateStats(); renderList(); });
+      .catch(err=>{ statuses[id]='error'; addLog('❌ Retry failed: '+a.name+'  -  '+err.message); updateStats(); renderList(); });
   }, 500);
 }
 
