@@ -157,18 +157,18 @@ function toggle() {
   const txt  = document.getElementById('statusText');
   const foot = document.getElementById('footerStatus');
   if(running) {
-    btn.textContent='⏸ Pause'; btn.className='btn-toggle btn-pause';
+    btn.textContent='|| Pause'; btn.className='btn-toggle btn-pause';
     dot.className='dot green'; txt.textContent='Live'; txt.style.color='#4ade80';
     foot.textContent='Live  -  checking every 30s';
-    addLog('▶ Started  -  watching for sign-ins');
+    addLog('> Started  -  watching for sign-ins');
     cycle();
     pollTimer = setInterval(cycle, 30000);
   } else {
-    btn.textContent='▶ Start'; btn.className='btn-toggle btn-start';
+    btn.textContent='> Start'; btn.className='btn-toggle btn-start';
     dot.className='dot gray'; txt.textContent='Paused'; txt.style.color='var(--gray)';
     foot.textContent='Paused';
     clearInterval(pollTimer);
-    addLog('⏸ Paused');
+    addLog('|| Paused');
   }
 }
 
@@ -202,35 +202,35 @@ async function cycle() {
     list.forEach(a => {
       if(a.audited==='done' && statuses[a.id]!=='done') {
         statuses[a.id]='done';
-        addLog('✅ Confirmed sent: '+a.name);
+        addLog('[OK] Confirmed sent: '+a.name);
       }
     });
 
     updateStats(); renderList();
 
     const unprocessed = list.filter(a => !processed.has(String(a.id)) && a.audited!=='done');
-    if(unprocessed.length>0) addLog('👥 '+unprocessed.length+' new attendee'+(unprocessed.length>1?'s':'')+' found');
+    if(unprocessed.length>0) addLog('? '+unprocessed.length+' new attendee'+(unprocessed.length>1?'s':'')+' found');
 
     for(const a of unprocessed) {
       if(!running) break;
       processed.add(String(a.id));
       statuses[a.id]='running';
       updateStats(); renderList();
-      addLog('🔍 Processing: '+a.name+'  -  '+a.company);
+      addLog('? Processing: '+a.name+'  -  '+a.company);
       try {
         await triggerAudit(a);
         statuses[a.id]='done';
-        addLog('✅ Triggered: '+a.name+'  -  audit + email running on Google servers');
+        addLog('[OK] Triggered: '+a.name+'  -  audit + email running on Google servers');
       } catch(err) {
         statuses[a.id]='error';
-        addLog('❌ Failed: '+a.name+'  -  '+err.message);
+        addLog('[X] Failed: '+a.name+'  -  '+err.message);
       }
       updateStats(); renderList();
       await sleep(1500);
     }
   } catch(err) {
     document.getElementById('errBanner').classList.add('show');
-    addLog('⚠️ Sheet fetch failed: '+err.message);
+    addLog('?? Sheet fetch failed: '+err.message);
   }
 }
 
@@ -250,7 +250,7 @@ function renderList() {
 
   if(attendees.length===0) {
     empty.style.display='block';
-    document.getElementById('emptyText').textContent = running ? 'Watching for sign-ins...' : 'Press ▶ Start to begin monitoring';
+    document.getElementById('emptyText').textContent = running ? 'Watching for sign-ins...' : 'Press > Start to begin monitoring';
     // keep only banner + empty
     container.innerHTML='';
     container.appendChild(banner);
@@ -260,21 +260,21 @@ function renderList() {
 
   const cards = attendees.map((a,i)=>{
     const s = statuses[a.id] || (a.audited==='done'?'done':'pending');
-    const badges = {pending:'⏳ Pending',running:'🔄 Processing',done:'✅ Sent',error:'❌ Error'};
+    const badges = {pending:'[...] Pending',running:'? Processing',done:'[OK] Sent',error:'[X] Error'};
     return `<div class="card ${s}">
       <div class="card-top">
         <div>
           <div class="card-name">${esc(a.name)}</div>
           <div class="card-company">${esc(a.company)}</div>
-          <div class="card-email">${esc(a.email)}${a.website?' · '+esc(a.website.replace(/^https?:\/\/(www\.)?/,''))':''}</div>
+          <div class="card-email">${esc(a.email)}${a.website?' . '+esc(a.website.replace(/^https?:\/\/(www\.)?/,''))':''}</div>
         </div>
         <div class="card-meta">
-          <span class="badge ${s}">${badges[s]||'⏳ Pending'}</span>
-          <span class="card-num">#${i+1} · ${esc(a.checked_in||'')}</span>
+          <span class="badge ${s}">${badges[s]||'[...] Pending'}</span>
+          <span class="card-num">#${i+1} . ${esc(a.checked_in||'')}</span>
         </div>
       </div>
-      ${s==='done'?`<div class="card-success">✅ Audit complete  -  email delivered to ${esc(a.email)}</div>`:''}
-      ${s==='error'?`<button class="btn-retry" onclick="retry('${a.id}')">↺ Retry</button>`:''}
+      ${s==='done'?`<div class="card-success">[OK] Audit complete  -  email delivered to ${esc(a.email)}</div>`:''}
+      ${s==='error'?`<button class="btn-retry" onclick="retry('${a.id}')">? Retry</button>`:''}
     </div>`;
   }).join('');
 
@@ -290,14 +290,14 @@ function retry(id) {
   if(!a) return;
   processed.delete(String(id));
   statuses[id]='pending';
-  addLog('🔁 Retrying: '+a.name);
+  addLog('? Retrying: '+a.name);
   updateStats(); renderList();
   setTimeout(()=>{
     statuses[id]='running';
     updateStats(); renderList();
     triggerAudit(a)
-      .then(()=>{ statuses[id]='done'; addLog('✅ Retry sent: '+a.name); updateStats(); renderList(); })
-      .catch(err=>{ statuses[id]='error'; addLog('❌ Retry failed: '+a.name+'  -  '+err.message); updateStats(); renderList(); });
+      .then(()=>{ statuses[id]='done'; addLog('[OK] Retry sent: '+a.name); updateStats(); renderList(); })
+      .catch(err=>{ statuses[id]='error'; addLog('[X] Retry failed: '+a.name+'  -  '+err.message); updateStats(); renderList(); });
   }, 500);
 }
 
